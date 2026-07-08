@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Тренажёр ПДД Израиля</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+    <div id="hud">
+      <div class="hud-pill" id="stats" title="Успехи / неудачи / процент успешных">
+        <span class="ok">✓ <span data-value="passed">0</span></span>
+        <span class="bad">✗ <span data-value="failed">0</span></span>
+        <span class="pct"><span data-value="percent">0</span>%</span>
+      </div>
+      <div class="hud-pill" id="time" title="Оставшееся время">⏱ <span data-value="time">60</span></div>
+      <div class="hud-pill" id="speed" title="Скорость">🚗 <span data-value="speed">0</span> км/ч</div>
+      <button class="hud-pill" id="btn-retry" type="button" title="Повторить задачу (R)">↻</button>
+      <button class="hud-pill" id="btn-next" type="button" title="Следующая задача (N / Enter)">→</button>
+    </div>
+    <div id="instruction">
+      <span data-value="instruction"></span>
+      <small data-value="task-id"></small>
+    </div>
+    <div id="result-overlay" hidden>
+      <div class="card">
+        <h2 data-value="result-title"></h2>
+        <p class="reason" data-value="result-reason"></p>
+        <p class="question"><small data-value="result-question"></small></p>
+        <p class="explanation" data-value="result-explanation"></p>
+        <div class="actions">
+          <button id="btn-overlay-retry" type="button">↻ Повторить (R)</button>
+          <button id="btn-overlay-next" type="button">→ Дальше (N)</button>
+        </div>
+      </div>
+    </div>
+    <div id="mobile-controls">
+      <div id="steering-wheel" aria-label="Руль">
+        <svg id="steering-wheel-svg" viewBox="-50 -50 100 100" aria-hidden="true">
+          <g id="steering-wheel-inner">
+            <circle r="46" fill="rgba(28,28,32,0.6)" stroke="rgba(255,255,255,0.55)" stroke-width="6"/>
+            <circle r="38" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="2"/>
+            <rect x="-40" y="-5" width="80" height="10" rx="3" fill="rgba(240,240,240,0.92)"/>
+            <rect x="-5" y="-40" width="10" height="22" rx="3" fill="rgba(240,240,240,0.92)"/>
+            <circle r="13" fill="rgba(255,206,77,0.95)"/>
+            <circle r="9" fill="rgba(0,0,0,0.25)"/>
+          </g>
+        </svg>
+      </div>
+      <div id="pedals">
+        <button id="pedal-brake" aria-label="Тормоз">ТОРМОЗ</button>
+        <button id="pedal-gas" aria-label="Газ">ГАЗ</button>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
