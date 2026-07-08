@@ -149,27 +149,25 @@ export class NpcAgent {
   }
 }
 
-/** Пешеход, переходящий дорогу по зебре. */
-export interface PedState {
-  pos: Vec2;
-  onRoad: boolean;
-  finished: boolean;
-}
-
+/** Пешеход, курсирующий по зебре туда-обратно. */
 export class PedAgent {
   pos: Vec2;
   readonly radius = 0.4;
-  private readonly from: Vec2;
-  private readonly to: Vec2;
+  private from: Vec2;
+  private to: Vec2;
   private readonly roadMin: number;
   private readonly roadMax: number;
   private readonly axis: 'x' | 'y';
   private delay: number;
   private t = 0;
-  finished = false;
+  private waitLeft = 0;
   private static readonly WALK_SPEED = 1.2;
+  /** Пауза на тротуаре перед обратным переходом. */
+  private static readonly PAUSE = 3.4;
 
-  /** Идёт от from к to; на проезжей части, пока координата axis в [roadMin, roadMax]. */
+  /** Идёт от from к to; на проезжей части, пока координата axis в
+   * [roadMin, roadMax]. Дойдя, выжидает паузу и идёт обратно — переход
+   * «живёт», и окно для проезда приходится выбирать. */
   constructor(opts: { from: Vec2; to: Vec2; axis: 'x' | 'y'; roadMin: number; roadMax: number; delay?: number }) {
     this.from = opts.from;
     this.to = opts.to;
@@ -182,20 +180,27 @@ export class PedAgent {
 
   get onRoad(): boolean {
     const c = this.axis === 'x' ? this.pos.x : this.pos.y;
-    return !this.finished && c >= this.roadMin && c <= this.roadMax;
+    return c >= this.roadMin && c <= this.roadMax;
   }
 
   update(dt: number): void {
-    if (this.finished) return;
     if (this.delay > 0) {
       this.delay -= dt;
+      return;
+    }
+    if (this.waitLeft > 0) {
+      this.waitLeft -= dt;
+      if (this.waitLeft <= 0) {
+        [this.from, this.to] = [this.to, this.from];
+        this.t = 0;
+      }
       return;
     }
     const total = Math.hypot(this.to.x - this.from.x, this.to.y - this.from.y);
     this.t += (PedAgent.WALK_SPEED * dt) / total;
     if (this.t >= 1) {
       this.t = 1;
-      this.finished = true;
+      this.waitLeft = PedAgent.PAUSE;
     }
     this.pos = {
       x: this.from.x + (this.to.x - this.from.x) * this.t,

@@ -145,6 +145,10 @@ export class Scenario {
    * значим (разворот или движение задним ходом), а не спавн. */
   private wasNearStop = false;
   private wasOnCrosswalk = false;
+  /** «Подъехали одновременно»: очередь NPC трогается, только когда игрок
+   * приблизился к перекрёстку — иначе те, кого надо пропустить, успевают
+   * проехать до его подъезда и задача решается сама собой. */
+  private queueStarted = false;
   private readonly stopRequired: boolean;
   private readonly stopZone: number;
   readonly crosswalkRects: Rect[];
@@ -310,7 +314,19 @@ export class Scenario {
     this.time += dt;
 
     this.car.update(dt, input);
-    for (const npc of this.npcs) npc.update(dt, this.mayGo(npc.spec.order));
+    if (!this.queueStarted) {
+      if (this.inter) {
+        this.queueStarted = this.distanceToStopLine() < 14;
+      } else if (this.road) {
+        const c = this.road.conflict;
+        this.queueStarted = c === null || this.car.position.y - c.yMax < 25;
+      }
+    }
+    for (const npc of this.npcs) {
+      // уже движущиеся по кольцу не ждут подъезда игрока
+      const started = this.queueStarted || npc.spec.ring !== undefined;
+      npc.update(dt, started && this.mayGo(npc.spec.order));
+    }
     for (const ped of this.pedestrians) ped.update(dt);
 
     const carOBB = this.car.getOBB();

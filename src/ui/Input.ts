@@ -76,66 +76,16 @@ export class Input {
   };
 
   private bindMobileControls(): void {
-    const wheel = document.getElementById('steering-wheel');
-    const inner = document.getElementById('steering-wheel-inner');
-    if (wheel && inner) {
-      let activeTouch: number | null = null;
-      let startX = 0;
-      let dragRange = 1;
-      let directionSign = 1;
-      const setRotation = (t: number): void => {
-        const deg = t * 110;
-        inner.setAttribute('transform', `rotate(${deg})`);
-      };
-
-      const update = (clientX: number): void => {
-        const dx = (clientX - startX) * directionSign;
-        const t = clamp(dx / dragRange, -1, 1);
-        this.touchSteer = t;
-        setRotation(t);
-      };
-
-      setRotation(0);
-
-      wheel.addEventListener('touchstart', (e: TouchEvent) => {
-        if (activeTouch !== null) return;
-        const touch = e.changedTouches[0];
-        activeTouch = touch.identifier;
-        const rect = wheel.getBoundingClientRect();
-        startX = touch.clientX;
-        dragRange = rect.width / 2;
-        directionSign = touch.clientY < rect.top + rect.height / 2 ? 1 : -1;
-        this.touchSteer = 0;
-        setRotation(0);
-        e.preventDefault();
-      }, { passive: false });
-
-      wheel.addEventListener('touchmove', (e: TouchEvent) => {
-        for (const t of Array.from(e.changedTouches)) {
-          if (t.identifier === activeTouch) {
-            update(t.clientX);
-            e.preventDefault();
-            break;
-          }
-        }
-      }, { passive: false });
-
-      const endTouch = (e: TouchEvent): void => {
-        for (const t of Array.from(e.changedTouches)) {
-          if (t.identifier === activeTouch) {
-            activeTouch = null;
-            this.touchSteer = 0;
-            setRotation(0);
-            break;
-          }
-        }
-      };
-      wheel.addEventListener('touchend', endTouch);
-      wheel.addEventListener('touchcancel', endTouch);
-    }
-
-    bindPedal('pedal-gas', (v) => { this.touchThrottle = v; });
-    bindPedal('pedal-brake', (v) => { this.touchBrake = v; });
+    // слева газ/тормоз (▲/▼), справа руль (◀/▶) — простые кнопки-удержания
+    let steerLeft = 0;
+    let steerRight = 0;
+    const applySteer = (): void => {
+      this.touchSteer = steerRight - steerLeft;
+    };
+    bindHoldButton('btn-accel', (v) => { this.touchThrottle = v; });
+    bindHoldButton('btn-reverse', (v) => { this.touchBrake = v; });
+    bindHoldButton('btn-steer-left', (v) => { steerLeft = v; applySteer(); });
+    bindHoldButton('btn-steer-right', (v) => { steerRight = v; applySteer(); });
   }
 
   private bindButtons(): void {
@@ -152,7 +102,7 @@ export class Input {
   }
 }
 
-function bindPedal(id: string, onChange: (v: number) => void): void {
+function bindHoldButton(id: string, onChange: (v: number) => void): void {
   const el = document.getElementById(id);
   if (!el) return;
   const press = (e: Event): void => { onChange(1); e.preventDefault(); };

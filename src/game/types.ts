@@ -12,30 +12,32 @@ export type VehicleKind =
   | 'motorcycle'
   | 'bicycle';
 
-/** Знаки, влияющие на поведение (израильские номера — в комментариях). */
+/** Знаки, влияющие на поведение (израильские номера — в комментариях;
+ * изображения лежат в public/signs/<номер>.png). */
 export type SignType =
   | 'stop'            // 302: полная остановка + уступить всем
   | 'yield'           // 301: уступить дорогу
   | 'priority-road'   // 309: главная дорога (у игрока приоритет)
   | 'priority-road-end' // 310: конец главной дороги
-  | 'only-straight'   // 424
-  | 'only-right'      // 425/414
-  | 'only-left'       // 413
-  | 'no-left-turn'    // 209
-  | 'no-right-turn'   // 210
-  | 'no-u-turn'       // 203
-  | 'only-u-turn'     // 212
+  | 'only-straight'   // 203
+  | 'only-right'      // 204
+  | 'only-left'       // 205
+  | 'no-left-turn'    // 429
+  | 'no-right-turn'   // 428
+  | 'no-u-turn'       // 431: разворот влево запрещён
+  | 'only-u-turn'     // 212: развернуться влево
   | 'no-entry'        // 402: въезд запрещён (вешается на выезд)
-  | 'one-way'         // 620: одностороннее движение
+  | 'one-way'         // 618: одностороннее движение
   | 'roundabout'      // 303: круговое движение
   | 'crosswalk'       // 306: пешеходный переход
-  | 'crosswalk-ahead' // 135/136: предупреждение о переходе
-  | 'speed-limit'     // 426: ограничение скорости (км/ч в signValue)
-  | 'narrow-yield'    // 502: уступи встречному на сужении
-  | 'narrow-priority' // 504: у тебя приоритет на сужении
-  | 'railway'         // жд переезд
+  | 'crosswalk-ahead' // 135: предупреждение о переходе
+  | 'pedestrians-near' // 136: поблизости пешеходы
+  | 'speed-limit'     // 426: ограничение скорости (км/ч в value); конец зоны — 427
+  | 'narrow-yield'    // 307: уступи встречному на сужении
+  | 'narrow-priority' // 308: у тебя приоритет на сужении
+  | 'railway'         // 129: жд переезд
   | 'traffic-light-ahead' // 122
-  | 't-junction';     // 115/117: Т-образный перекрёсток
+  | 't-junction';     // 115: Т-образный перекрёсток
 
 export interface LaneCount {
   /** Полос к перекрёстку (по направлению движения этого подъезда). */
@@ -118,7 +120,11 @@ export interface SceneSpec {
   roundabout?: boolean;
   signs?: SignSpec[];
   /** Светофор для подъезда игрока (и всех, если не указано иное). */
-  light?: { phases: LightPhase[] };
+  light?: {
+    phases: LightPhase[];
+    /** Дополнительная секция «жёлтая стрелка» для общественного транспорта. */
+    busArrow?: boolean;
+  };
   npcs?: NpcSpec[];
   pedestrians?: PedestrianSpec[];
   /** Зоны на прямом участке ('road'). Расстояния в метрах от старта игрока. */

@@ -66,7 +66,7 @@ export const lightTasks: TaskDef[] = [
       'Жёлтая стрелка светофора — только для общественного транспорта. Дождитесь зелёного сигнала.',
     scene: {
       kind: 'intersection',
-      light: { phases: [{ state: 'red', duration: 6 }, { state: 'green' }] },
+      light: { phases: [{ state: 'red', duration: 6 }, { state: 'green' }], busArrow: true },
       player: { approach: 'S', order: 0, goal: 'straight' },
     },
   },

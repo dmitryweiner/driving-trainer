@@ -20,7 +20,11 @@
       <button class="hud-pill" id="btn-next" type="button" title="Следующая задача (N / Enter)">→</button>
     </div>
     <div id="instruction">
-      <span data-value="instruction"></span>
+      <div class="q-row">
+        <span data-value="question"></span>
+        <button id="btn-hint" type="button" title="Показать подсказку (I)">i</button>
+      </div>
+      <div class="hint" data-value="instruction" hidden></div>
       <small data-value="task-id"></small>
     </div>
     <div id="result-overlay" hidden>
@@ -36,21 +40,13 @@
       </div>
     </div>
     <div id="mobile-controls">
-      <div id="steering-wheel" aria-label="Руль">
-        <svg id="steering-wheel-svg" viewBox="-50 -50 100 100" aria-hidden="true">
-          <g id="steering-wheel-inner">
-            <circle r="46" fill="rgba(28,28,32,0.6)" stroke="rgba(255,255,255,0.55)" stroke-width="6"/>
-            <circle r="38" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="2"/>
-            <rect x="-40" y="-5" width="80" height="10" rx="3" fill="rgba(240,240,240,0.92)"/>
-            <rect x="-5" y="-40" width="10" height="22" rx="3" fill="rgba(240,240,240,0.92)"/>
-            <circle r="13" fill="rgba(255,206,77,0.95)"/>
-            <circle r="9" fill="rgba(0,0,0,0.25)"/>
-          </g>
-        </svg>
+      <div id="ctl-left">
+        <button id="btn-accel" aria-label="Газ">▲</button>
+        <button id="btn-reverse" aria-label="Тормоз / задний ход">▼</button>
       </div>
-      <div id="pedals">
-        <button id="pedal-brake" aria-label="Тормоз">ТОРМОЗ</button>
-        <button id="pedal-gas" aria-label="Газ">ГАЗ</button>
+      <div id="ctl-right">
+        <button id="btn-steer-left" aria-label="Руль влево">◀</button>
+        <button id="btn-steer-right" aria-label="Руль вправо">▶</button>
       </div>
     </div>
     <script type="module" src="/src/main.ts"></script>

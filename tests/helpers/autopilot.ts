@@ -130,8 +130,8 @@ export class Autopilot {
         const near = pos.y <= z.rect.yMax + 14 && pos.y >= z.rect.yMin - 2;
         if (near) speed = Math.min(speed, (z.limitKmh / 3.6) * 0.8);
       }
-      // осторожность у перехода, пока пешеходы не закончили движение
-      if (sc.pedestrians.some((p) => !p.finished) && sc.road.crosswalks.length > 0) {
+      // осторожность у перехода: пешеходы курсируют постоянно
+      if (sc.pedestrians.length > 0 && sc.road.crosswalks.length > 0) {
         const d = pos.y - sc.road.crosswalks[0].yMax;
         if (d < 16 && d > -3) speed = Math.min(speed, 3.5);
       }

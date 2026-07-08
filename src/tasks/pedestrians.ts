@@ -26,7 +26,9 @@ export const pedestrianTasks: TaskDef[] = [
       signs: [{ approach: 'S', type: 'crosswalk' }],
       pedestrians: [
         { approach: 'S', from: 'right' },
-        { approach: 'S', from: 'left', delay: 4 },
+        // почти одновременно с первым — чтобы между их «рейсами»
+        // оставалось окно для проезда
+        { approach: 'S', from: 'left', delay: 1 },
       ],
       player: { approach: 'S', order: 0, goal: 'straight' },
     },
@@ -38,7 +40,7 @@ export const pedestrianTasks: TaskDef[] = [
     scene: {
       kind: 'road',
       zones: [{ type: 'crosswalk', at: 20, length: 3 }],
-      signs: [{ approach: 'S', type: 'crosswalk-ahead' }],
+      signs: [{ approach: 'S', type: 'pedestrians-near' }],
       pedestrians: [{ approach: 'S', from: 'right', delay: 1 }],
       player: { approach: 'S', order: 0, goal: 'straight' },
     },

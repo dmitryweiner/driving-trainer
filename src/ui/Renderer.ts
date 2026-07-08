@@ -2,7 +2,7 @@ import type { Car } from '../game/Car';
 import { LANE_W, ROAD_LEN, STOP_LINE_OFFSET, type Intersection, type Rect } from '../game/Intersection';
 import type { NpcAgent, PedAgent } from '../game/Npc';
 import type { RoadGeom, Scenario } from '../game/Scenario';
-import type { Dir, LightState, SignSpec, Turn } from '../game/types';
+import type { Dir, LightState, SignSpec, SignType, Turn } from '../game/types';
 
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 4;
@@ -80,15 +80,25 @@ export class Renderer {
   private drawIntersection(ctx: CanvasRenderingContext2D, sc: Scenario, inter: Intersection): void {
     const b = inter.box;
 
-    // полотно: зона + подъезды
+    // полотно: зона + подъезды (у кольца подъезды продлеваются до круга)
     ctx.fillStyle = ASPHALT;
-    ctx.fillRect(b.xMin, b.yMin, b.xMax - b.xMin, b.yMax - b.yMin);
+    const inset = inter.roundabout ? 6 : 0;
     for (const d of inter.approaches) {
       const r = inter.roadRect(d);
-      if (r) ctx.fillRect(r.xMin, r.yMin, r.xMax - r.xMin, r.yMax - r.yMin);
+      if (!r) continue;
+      switch (d) {
+        case 'S': ctx.fillRect(r.xMin, r.yMin - inset, r.xMax - r.xMin, r.yMax - r.yMin + inset); break;
+        case 'N': ctx.fillRect(r.xMin, r.yMin, r.xMax - r.xMin, r.yMax - r.yMin + inset); break;
+        case 'W': ctx.fillRect(r.xMin, r.yMin, r.xMax - r.xMin + inset, r.yMax - r.yMin); break;
+        case 'E': ctx.fillRect(r.xMin - inset, r.yMin, r.xMax - r.xMin + inset, r.yMax - r.yMin); break;
+      }
     }
 
     if (inter.roundabout) {
+      // круглое полотно кольца, островок и пунктир полосы движения
+      ctx.beginPath();
+      ctx.arc(0, 0, inter.outerRadius, 0, Math.PI * 2);
+      ctx.fill();
       ctx.fillStyle = GRASS;
       ctx.beginPath();
       ctx.arc(0, 0, inter.islandRadius, 0, Math.PI * 2);
@@ -96,6 +106,13 @@ export class Renderer {
       ctx.strokeStyle = MARK;
       ctx.lineWidth = 0.25;
       ctx.stroke();
+      ctx.setLineDash([1.6, 1.6]);
+      ctx.beginPath();
+      ctx.arc(0, 0, inter.ringRadius + LANE_W / 2, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    } else {
+      ctx.fillRect(b.xMin, b.yMin, b.xMax - b.xMin, b.yMax - b.yMin);
     }
 
     // разметка подъездов
@@ -225,7 +242,7 @@ export class Renderer {
     if (sc.task.scene.light) {
       const a = sc.task.scene.player.approach;
       const pos = signPos(inter, a, (counts[a] ?? 0) + 0.2);
-      drawTrafficLight(ctx, pos.x, pos.y, sc.lightState(), sc.time);
+      drawTrafficLight(ctx, pos.x, pos.y, sc.lightState(), sc.time, false, sc.task.scene.light.busArrow);
     }
   }
 
@@ -400,12 +417,12 @@ function drawTurnArrow(ctx: CanvasRenderingContext2D, x: number, y: number, head
     ctx.lineTo(0, -0.4);
     ctx.quadraticCurveTo(0, -1.4, -1.0, -1.4);
     ctx.stroke();
-    head(-1.2, -1.4, Math.PI / 2);
+    head(-1.2, -1.4, -Math.PI / 2);
   } else if (turn === 'right') {
     ctx.lineTo(0, -0.4);
     ctx.quadraticCurveTo(0, -1.4, 1.0, -1.4);
     ctx.stroke();
-    head(1.2, -1.4, -Math.PI / 2);
+    head(1.2, -1.4, Math.PI / 2);
   } else {
     // разворот
     ctx.lineTo(0, -0.6);
@@ -424,6 +441,7 @@ function drawTrafficLight(
   state: LightState,
   time: number,
   railway = false,
+  busArrow = false,
 ): void {
   const blinkOn = time % 0.9 < 0.5;
   ctx.save();
@@ -458,259 +476,88 @@ function drawTrafficLight(
     ctx.arc(0, -1.3 + i * 1.3, 0.5, 0, Math.PI * 2);
     ctx.fill();
   }
+  if (busArrow) {
+    // дополнительная секция: жёлтая стрелка для общественного транспорта,
+    // горит, пока основной сигнал запрещающий
+    ctx.fillStyle = '#22242a';
+    ctx.fillRect(w / 2, -h / 2, 1.4, 1.4);
+    const on = state === 'red' || state === 'red-yellow';
+    ctx.strokeStyle = on ? '#ffcc00' : '#4a442a';
+    ctx.fillStyle = ctx.strokeStyle;
+    ctx.lineWidth = 0.2;
+    ctx.lineCap = 'round';
+    const cx = w / 2 + 0.7;
+    const cy = -h / 2 + 0.75;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy + 0.4);
+    ctx.lineTo(cx, cy - 0.1);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - 0.45);
+    ctx.lineTo(cx - 0.28, cy - 0.05);
+    ctx.lineTo(cx + 0.28, cy - 0.05);
+    ctx.closePath();
+    ctx.fill();
+  }
   ctx.restore();
 }
 
-/** Пиктограммы знаков (упрощённые израильские). */
-function drawSign(ctx: CanvasRenderingContext2D, x: number, y: number, sign: SignSpec, endOfZone = false): void {
-  ctx.save();
-  ctx.translate(x, y);
-  const R = 1.2;
-  const circle = (fill: string, border: string): void => {
-    ctx.beginPath();
-    ctx.arc(0, 0, R, 0, Math.PI * 2);
-    ctx.fillStyle = fill;
-    ctx.fill();
-    ctx.lineWidth = 0.32;
-    ctx.strokeStyle = border;
-    ctx.stroke();
-  };
-  const arrow = (angle: number, color = '#fff'): void => {
-    ctx.save();
-    ctx.rotate(angle);
-    ctx.strokeStyle = color;
-    ctx.fillStyle = color;
-    ctx.lineWidth = 0.28;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(0, 0.6);
-    ctx.lineTo(0, -0.35);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(0, -0.75);
-    ctx.lineTo(-0.4, -0.2);
-    ctx.lineTo(0.4, -0.2);
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
-  };
-  const slash = (color = '#d0342c'): void => {
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 0.26;
-    ctx.beginPath();
-    ctx.moveTo(-R * 0.75, R * 0.75);
-    ctx.lineTo(R * 0.75, -R * 0.75);
-    ctx.stroke();
-  };
-  const text = (s: string, size: number, color: string): void => {
-    ctx.fillStyle = color;
-    ctx.font = `bold ${size}px sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(s, 0, 0.05);
-  };
-  const warnTriangle = (): void => {
-    ctx.beginPath();
-    ctx.moveTo(0, -R);
-    ctx.lineTo(R, R * 0.8);
-    ctx.lineTo(-R, R * 0.8);
-    ctx.closePath();
-    ctx.fillStyle = '#fff';
-    ctx.fill();
-    ctx.lineWidth = 0.3;
-    ctx.strokeStyle = '#d0342c';
-    ctx.stroke();
-  };
+/** Изображения израильских знаков (public/signs/<номер>.png,
+ * вырезаны из справочника isradrive). */
+const SIGN_FILE: Record<SignType, string> = {
+  'stop': '302',
+  'yield': '301',
+  'priority-road': '309',
+  'priority-road-end': '310',
+  'only-straight': '203',
+  'only-right': '204',
+  'only-left': '205',
+  'no-left-turn': '429',
+  'no-right-turn': '428',
+  'no-u-turn': '431',
+  'only-u-turn': '212',
+  'no-entry': '402',
+  'one-way': '618',
+  'roundabout': '303',
+  'crosswalk': '306',
+  'crosswalk-ahead': '135',
+  'pedestrians-near': '136',
+  'speed-limit': '426',
+  'narrow-yield': '307',
+  'narrow-priority': '308',
+  'railway': '129',
+  'traffic-light-ahead': '122',
+  't-junction': '115',
+};
 
-  switch (sign.type) {
-    case 'stop': {
-      ctx.beginPath();
-      for (let i = 0; i < 8; i++) {
-        const a = (Math.PI / 8) * (2 * i + 1);
-        const px = R * Math.cos(a);
-        const py = R * Math.sin(a);
-        if (i === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
-      }
-      ctx.closePath();
-      ctx.fillStyle = '#d0342c';
-      ctx.fill();
-      ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 0.14;
-      ctx.stroke();
-      text('STOP', 0.55, '#fff');
-      break;
-    }
-    case 'yield':
-      ctx.beginPath();
-      ctx.moveTo(0, R);
-      ctx.lineTo(R, -R * 0.8);
-      ctx.lineTo(-R, -R * 0.8);
-      ctx.closePath();
-      ctx.fillStyle = '#fff';
-      ctx.fill();
-      ctx.lineWidth = 0.34;
-      ctx.strokeStyle = '#d0342c';
-      ctx.stroke();
-      break;
-    case 'priority-road':
-    case 'priority-road-end':
-      ctx.save();
-      ctx.rotate(Math.PI / 4);
-      ctx.fillStyle = '#fff';
-      ctx.fillRect(-R * 0.75, -R * 0.75, R * 1.5, R * 1.5);
-      ctx.fillStyle = '#f5b942';
-      ctx.fillRect(-R * 0.45, -R * 0.45, R * 0.9, R * 0.9);
-      ctx.restore();
-      if (sign.type === 'priority-road-end') slash('#555');
-      break;
-    case 'only-straight':
-      circle('#1e62c4', '#fff');
-      arrow(0);
-      break;
-    case 'only-right':
-      circle('#1e62c4', '#fff');
-      arrow(Math.PI / 2);
-      break;
-    case 'only-left':
-      circle('#1e62c4', '#fff');
-      arrow(-Math.PI / 2);
-      break;
-    case 'no-left-turn':
-      circle('#fff', '#d0342c');
-      arrow(-Math.PI / 2, '#333');
-      slash();
-      break;
-    case 'no-right-turn':
-      circle('#fff', '#d0342c');
-      arrow(Math.PI / 2, '#333');
-      slash();
-      break;
-    case 'no-u-turn':
-      circle('#fff', '#d0342c');
-      text('∩', 1.3, '#333');
-      slash();
-      break;
-    case 'only-u-turn':
-      circle('#1e62c4', '#fff');
-      text('∩', 1.3, '#fff');
-      break;
-    case 'no-entry':
-      circle('#d0342c', '#fff');
-      ctx.fillStyle = '#fff';
-      ctx.fillRect(-R * 0.65, -0.18, R * 1.3, 0.36);
-      break;
-    case 'one-way':
-      ctx.fillStyle = '#1e62c4';
-      ctx.fillRect(-R, -R * 0.6, R * 2, R * 1.2);
-      ctx.save();
-      ctx.rotate(-Math.PI / 2);
-      arrow(Math.PI / 2);
-      ctx.restore();
-      arrow(0);
-      break;
-    case 'roundabout':
-      circle('#1e62c4', '#fff');
-      ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 0.26;
-      ctx.beginPath();
-      ctx.arc(0, 0, 0.55, 0.4, Math.PI * 2 - 0.6);
-      ctx.stroke();
-      break;
-    case 'crosswalk':
-      ctx.fillStyle = '#1e62c4';
-      ctx.fillRect(-R, -R, R * 2, R * 2);
-      ctx.fillStyle = '#fff';
-      ctx.beginPath();
-      ctx.arc(0, -0.45, 0.22, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.lineWidth = 0.24;
-      ctx.strokeStyle = '#fff';
-      ctx.beginPath();
-      ctx.moveTo(-0.35, 0.6);
-      ctx.lineTo(0, -0.1);
-      ctx.lineTo(0.35, 0.6);
-      ctx.stroke();
-      break;
-    case 'crosswalk-ahead':
-      warnTriangle();
-      ctx.fillStyle = '#333';
-      ctx.beginPath();
-      ctx.arc(0, -0.2, 0.18, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.lineWidth = 0.2;
-      ctx.strokeStyle = '#333';
-      ctx.beginPath();
-      ctx.moveTo(-0.28, 0.6);
-      ctx.lineTo(0, 0.05);
-      ctx.lineTo(0.28, 0.6);
-      ctx.stroke();
-      break;
-    case 'speed-limit':
-      circle('#fff', endOfZone ? '#777' : '#d0342c');
-      text(String(sign.value ?? ''), 0.9, '#222');
-      if (endOfZone) slash('#777');
-      break;
-    case 'narrow-yield':
-      circle('#fff', '#d0342c');
-      ctx.save();
-      ctx.translate(-0.35, 0);
-      arrow(Math.PI, '#d0342c');
-      ctx.restore();
-      ctx.save();
-      ctx.translate(0.35, 0);
-      arrow(0, '#333');
-      ctx.restore();
-      break;
-    case 'narrow-priority':
-      ctx.fillStyle = '#1e62c4';
-      ctx.fillRect(-R, -R, R * 2, R * 2);
-      ctx.save();
-      ctx.translate(0.35, 0);
-      arrow(0, '#fff');
-      ctx.restore();
-      ctx.save();
-      ctx.translate(-0.35, 0);
-      arrow(Math.PI, '#e05a52');
-      ctx.restore();
-      break;
-    case 'railway':
-      warnTriangle();
-      ctx.strokeStyle = '#333';
-      ctx.lineWidth = 0.16;
-      ctx.beginPath();
-      ctx.moveTo(-0.5, 0.5);
-      ctx.lineTo(0.5, 0.5);
-      ctx.moveTo(-0.4, 0.15);
-      ctx.lineTo(0.4, 0.15);
-      ctx.moveTo(-0.25, 0.5);
-      ctx.lineTo(-0.25, 0.05);
-      ctx.moveTo(0.25, 0.5);
-      ctx.lineTo(0.25, 0.05);
-      ctx.stroke();
-      break;
-    case 'traffic-light-ahead':
-      warnTriangle();
-      for (const [i, c] of ['#d0342c', '#f5b942', '#3a9e4d'].entries()) {
-        ctx.fillStyle = c;
-        ctx.beginPath();
-        ctx.arc(0, -0.25 + i * 0.4, 0.16, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      break;
-    case 't-junction':
-      warnTriangle();
-      ctx.strokeStyle = '#333';
-      ctx.lineWidth = 0.24;
-      ctx.beginPath();
-      ctx.moveTo(0, 0.6);
-      ctx.lineTo(0, -0.1);
-      ctx.moveTo(0, -0.1);
-      ctx.lineTo(0.5, -0.1);
-      ctx.stroke();
-      break;
+const signImages = new Map<string, HTMLImageElement>();
+
+function signImage(num: string): HTMLImageElement {
+  let img = signImages.get(num);
+  if (!img) {
+    img = new Image();
+    img.src = `signs/${num}.png`;
+    signImages.set(img.src, img);
+    signImages.set(num, img);
   }
-  ctx.restore();
+  return img;
+}
+
+/** Высота знака в метрах мира. */
+const SIGN_H = 3.0;
+const SIGN_W = SIGN_H * (78 / 63);
+
+function drawSign(ctx: CanvasRenderingContext2D, x: number, y: number, sign: SignSpec, endOfZone = false): void {
+  let num = SIGN_FILE[sign.type];
+  if (sign.type === 'speed-limit') {
+    // для лимитов, отличных от «50» на исходной картинке, есть готовые
+    // варианты (426-30.png и т.п.), для конца зоны — 427-*
+    num = endOfZone ? '427' : '426';
+    if (sign.value !== undefined && sign.value !== 50) num = `${num}-${sign.value}`;
+  }
+  const img = signImage(num);
+  if (!img.complete || img.naturalWidth === 0) return; // появится на следующем кадре
+  ctx.drawImage(img, x - SIGN_W / 2, y - SIGN_H / 2, SIGN_W, SIGN_H);
 }
 
 function drawNpc(ctx: CanvasRenderingContext2D, npc: NpcAgent): void {
@@ -720,19 +567,39 @@ function drawNpc(ctx: CanvasRenderingContext2D, npc: NpcAgent): void {
     ctx.save();
     ctx.translate(npc.pos.x, npc.pos.y);
     ctx.rotate(npc.heading);
-    // рама/корпус
-    ctx.fillStyle = npc.spec.color;
-    roundRect(ctx, -length / 2, -width / 2, length, width, 0.25);
+    const hl = length / 2;
+    // колёса — вытянутые тёмные «капсулы»
+    ctx.fillStyle = '#1c1e22';
+    roundRect(ctx, hl - 0.85, -0.14, 0.85, 0.28, 0.14);
     ctx.fill();
-    // колёса
-    ctx.fillStyle = '#222';
-    ctx.fillRect(length / 2 - 0.45, -0.12, 0.45, 0.24);
-    ctx.fillRect(-length / 2, -0.12, 0.45, 0.24);
-    // «водитель»
-    ctx.fillStyle = '#f5d6a8';
+    roundRect(ctx, -hl, -0.14, 0.85, 0.28, 0.14);
+    ctx.fill();
+    // рама между колёсами
+    ctx.strokeStyle = npc.spec.color;
+    ctx.lineWidth = kind === 'motorcycle' ? 0.34 : 0.2;
+    ctx.lineCap = 'round';
     ctx.beginPath();
-    ctx.arc(0, 0, 0.28, 0, Math.PI * 2);
+    ctx.moveTo(-hl + 0.4, 0);
+    ctx.lineTo(hl - 0.4, 0);
+    ctx.stroke();
+    // руль
+    ctx.lineWidth = 0.16;
+    ctx.beginPath();
+    ctx.moveTo(hl - 0.55, -0.55);
+    ctx.lineTo(hl - 0.55, 0.55);
+    ctx.stroke();
+    // водитель: плечи поперёк движения + голова со шлемом
+    ctx.fillStyle = npc.spec.color;
+    ctx.beginPath();
+    ctx.ellipse(-0.25, 0, 0.42, 0.62, 0, 0, Math.PI * 2);
     ctx.fill();
+    ctx.fillStyle = kind === 'motorcycle' ? '#2b2f38' : '#f5d6a8';
+    ctx.beginPath();
+    ctx.arc(0.05, 0, 0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(20,20,20,0.55)';
+    ctx.lineWidth = 0.06;
+    ctx.stroke();
     ctx.restore();
   } else {
     drawCarBody(ctx, {
@@ -748,8 +615,10 @@ function drawNpc(ctx: CanvasRenderingContext2D, npc: NpcAgent): void {
     });
   }
   if (npc.spec.label) {
+    // у двухколёсных номер рисуем рядом, чтобы не закрывать силуэт
+    const off = kind === 'bicycle' || kind === 'motorcycle' ? 1.1 : 0;
     ctx.save();
-    ctx.translate(npc.pos.x, npc.pos.y);
+    ctx.translate(npc.pos.x + off, npc.pos.y - off);
     ctx.fillStyle = '#fff';
     ctx.beginPath();
     ctx.arc(0, 0, 0.75, 0, Math.PI * 2);
@@ -767,7 +636,6 @@ function drawNpc(ctx: CanvasRenderingContext2D, npc: NpcAgent): void {
 }
 
 function drawPedestrian(ctx: CanvasRenderingContext2D, ped: PedAgent): void {
-  if (ped.finished) return;
   ctx.save();
   ctx.translate(ped.pos.x, ped.pos.y);
   ctx.fillStyle = '#2563eb';

@@ -50,8 +50,19 @@ describe('Scenario: приоритет на перекрёстке', () => {
 
   it('подождать велосипедиста и проехать — успех', () => {
     const s = new Scenario(makeTask(scene));
-    run(s, (sc) => (sc.npcs[0].cleared ? GO : wait(sc)));
+    // подъехать к линии (очередь трогается при приближении игрока),
+    // подождать велосипедиста, затем проехать
+    run(s, (sc) => {
+      if (sc.npcs[0].cleared) return GO;
+      return sc.distanceToStopLine() < 10 ? wait(sc) : GO;
+    });
     expect(s.state.kind).toBe('passed');
+  });
+
+  it('NPC не трогается, пока игрок далеко от перекрёстка', () => {
+    const s = new Scenario(makeTask(scene));
+    run(s, (sc) => wait(sc), 4);
+    expect(s.npcs[0].entered).toBe(false);
   });
 
   it('NPC с порядком после игрока ждёт игрока', () => {

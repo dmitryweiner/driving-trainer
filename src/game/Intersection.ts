@@ -368,10 +368,45 @@ export class Intersection {
     }
   }
 
+  /** Внешний радиус кольцевого перекрёстка (для отрисовки). */
+  get outerRadius(): number {
+    return ROUNDABOUT_HALF;
+  }
+
+  /** Радиус полосы движения по кольцу (для отрисовки). */
+  get ringRadius(): number {
+    return RING_R;
+  }
+
   isOnRoad(p: Vec2): boolean {
     const b = this.box;
+    if (this.roundabout) {
+      // круговой перекрёсток: полотно — кольцо между островком и внешним
+      // кругом; подъезды продлеваются от края круга до своих дорог
+      const r = Math.hypot(p.x, p.y);
+      if (r < this.islandRadius) return false;
+      if (r <= ROUNDABOUT_HALF) return true;
+      for (const d of this.approaches) {
+        const band = this.roadBand(d);
+        if (!band) continue;
+        switch (d) {
+          case 'S':
+            if (p.y >= 0 && p.y <= b.yMax + ROAD_LEN && p.x >= band.min && p.x <= band.max) return true;
+            break;
+          case 'N':
+            if (p.y <= 0 && p.y >= b.yMin - ROAD_LEN && p.x >= band.min && p.x <= band.max) return true;
+            break;
+          case 'W':
+            if (p.x <= 0 && p.x >= b.xMin - ROAD_LEN && p.y >= band.min && p.y <= band.max) return true;
+            break;
+          case 'E':
+            if (p.x >= 0 && p.x <= b.xMax + ROAD_LEN && p.y >= band.min && p.y <= band.max) return true;
+            break;
+        }
+      }
+      return false;
+    }
     if (p.x >= b.xMin && p.x <= b.xMax && p.y >= b.yMin && p.y <= b.yMax) {
-      if (this.roundabout && Math.hypot(p.x, p.y) < this.islandRadius) return false;
       return true;
     }
     // скруглённые углы тротуаров: небольшие «подушки» у углов зоны

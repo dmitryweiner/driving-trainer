@@ -7,7 +7,8 @@ export class Hud {
   private readonly percentEl = byValue('percent');
   private readonly timeEl = byValue('time');
   private readonly speedEl = byValue('speed');
-  private readonly instructionEl = byValue('instruction');
+  private readonly questionEl = byValue('question');
+  private readonly hintEl = byValue('instruction');
   private readonly taskIdEl = byValue('task-id');
   private readonly overlayEl = document.getElementById('result-overlay');
   private readonly resultTitleEl = byValue('result-title');
@@ -20,6 +21,19 @@ export class Hud {
   private lastSpeed = -1;
   private lastTaskId = '';
   private overlayShown = false;
+
+  constructor() {
+    // подсказка (инструкция) скрыта; показывается по кнопке (i) или клавише I
+    const toggleHint = (): void => {
+      if (!this.hintEl) return;
+      if (this.hintEl.hasAttribute('hidden')) this.hintEl.removeAttribute('hidden');
+      else this.hintEl.setAttribute('hidden', '');
+    };
+    document.getElementById('btn-hint')?.addEventListener('click', toggleHint);
+    window.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.code === 'KeyI') toggleHint();
+    });
+  }
 
   update(sc: Scenario, stats: SessionStats): void {
     const statsKey = `${stats.passed}/${stats.failed}`;
@@ -44,7 +58,9 @@ export class Hud {
 
     if (sc.task.id !== this.lastTaskId) {
       this.lastTaskId = sc.task.id;
-      setText(this.instructionEl, sc.task.instruction);
+      setText(this.questionEl, sc.task.question);
+      setText(this.hintEl, sc.task.instruction);
+      this.hintEl?.setAttribute('hidden', '');
       setText(this.taskIdEl, `№${sc.task.id}`);
     }
 
