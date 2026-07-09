@@ -292,7 +292,16 @@ export class Renderer {
     if (sc.task.scene.light) {
       const a = sc.task.scene.player.approach;
       const pos = signPos(inter, a, (counts[a] ?? 0) + 0.2);
-      drawTrafficLight(ctx, pos.x, pos.y, sc.lightState(), sc.time, false, sc.task.scene.light.busArrow);
+      drawTrafficLight(
+        ctx,
+        pos.x,
+        pos.y,
+        sc.lightState(),
+        sc.time,
+        false,
+        sc.task.scene.light.busArrow,
+        sc.task.scene.light.greenArrow,
+      );
     }
   }
 
@@ -355,7 +364,10 @@ export class Renderer {
         : sign.type === 'railway' ? z.type === 'railway'
         : z.type === 'crosswalk',
       );
-      const y = zone ? -(zone.at - 4) : -8;
+      // знак жд при наличии светофора отодвигаем дальше от переезда,
+      // чтобы не накладывался на сам светофор (он стоит у стоп-линии)
+      const back = sign.type === 'railway' && sc.task.scene.light ? 7 : 4;
+      const y = zone ? -(zone.at - back) : -8;
       drawSign(ctx, signX, y, sign);
       // конец зоны ограничения скорости
       if (sign.type === 'speed-limit' && zone) {
@@ -363,7 +375,7 @@ export class Renderer {
       }
     }
     if (sc.task.scene.light && road.railway) {
-      drawTrafficLight(ctx, signX, road.railway.yMax + 4, sc.lightState(), sc.time, true);
+      drawTrafficLight(ctx, signX, road.railway.yMax + 2.2, sc.lightState(), sc.time, true);
     }
   }
 }
@@ -516,6 +528,7 @@ function drawTrafficLight(
   time: number,
   railway = false,
   busArrow = false,
+  greenArrow = false,
 ): void {
   const blinkOn = time % 0.9 < 0.5;
   ctx.save();
@@ -545,9 +558,32 @@ function drawTrafficLight(
     ['#34c759', state === 'green' || (state === 'green-flashing' && blinkOn)],
   ];
   for (const [i, [color, on]] of lamps.entries()) {
+    const cy = -1.3 + i * 1.3;
+    if (i === 2 && greenArrow) {
+      // зелёная секция — стрелка «прямо» вместо круглого сигнала
+      ctx.fillStyle = '#15171c';
+      ctx.beginPath();
+      ctx.arc(0, cy, 0.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = on ? color : '#2a4a35';
+      ctx.fillStyle = ctx.strokeStyle;
+      ctx.lineWidth = 0.14;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(0, cy + 0.3);
+      ctx.lineTo(0, cy - 0.02);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0, cy - 0.34);
+      ctx.lineTo(-0.22, cy - 0.02);
+      ctx.lineTo(0.22, cy - 0.02);
+      ctx.closePath();
+      ctx.fill();
+      continue;
+    }
     ctx.fillStyle = on ? color : '#3a3d45';
     ctx.beginPath();
-    ctx.arc(0, -1.3 + i * 1.3, 0.5, 0, Math.PI * 2);
+    ctx.arc(0, cy, 0.5, 0, Math.PI * 2);
     ctx.fill();
   }
   if (busArrow) {

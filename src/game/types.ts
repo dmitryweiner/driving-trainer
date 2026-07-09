@@ -128,6 +128,8 @@ export interface SceneSpec {
     phases: LightPhase[];
     /** Дополнительная секция «жёлтая стрелка» для общественного транспорта. */
     busArrow?: boolean;
+    /** Зелёная секция — стрелка «прямо» вместо круглого сигнала (рендер). */
+    greenArrow?: boolean;
   };
   npcs?: NpcSpec[];
   pedestrians?: PedestrianSpec[];

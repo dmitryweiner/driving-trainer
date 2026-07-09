@@ -135,7 +135,7 @@ export const lightTasks: TaskDef[] = [
     instruction: 'Зелёная стрелка прямо: двигайтесь только в направлении стрелки.',
     scene: {
       kind: 'intersection',
-      light: { phases: [{ state: 'green' }] },
+      light: { phases: [{ state: 'green' }], greenArrow: true },
       player: { approach: 'S', order: 0, goal: 'straight' },
     },
   },
