@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Тренажёр ПДД Израиля</title>
-    <script type="module" crossorigin src="./assets/index-xD44Zcbu.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-BZZ2a84G.css">
+    <script type="module" crossorigin src="./assets/index-KQUrHJGJ.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-vZMz0xEx.css">
   </head>
   <body>
     <canvas id="game"></canvas>
@@ -17,16 +17,22 @@
       </div>
       <div class="hud-pill" id="time" title="Оставшееся время">⏱ <span data-value="time">60</span></div>
       <div class="hud-pill" id="speed" title="Скорость">🚗 <span data-value="speed">0</span> км/ч</div>
+      <button class="hud-pill" id="btn-ticket" type="button" title="Показать билет (T)">🎫</button>
       <button class="hud-pill" id="btn-retry" type="button" title="Повторить задачу (R)">↻</button>
       <button class="hud-pill" id="btn-next" type="button" title="Следующая задача (N / Enter)">→</button>
     </div>
-    <div id="instruction">
-      <div class="q-row">
-        <span data-value="question"></span>
-        <button id="btn-hint" type="button" title="Показать подсказку (I)">i</button>
+    <div id="ticket-overlay" hidden>
+      <div class="card">
+        <p class="question">
+          <span data-value="question"></span>
+          <button id="btn-hint" type="button" title="Показать подсказку (I)">i</button>
+        </p>
+        <p class="hint" data-value="instruction" hidden></p>
+        <p class="meta"><small data-value="task-id"></small></p>
+        <div class="actions">
+          <button id="btn-ticket-go" type="button">Решать!</button>
+        </div>
       </div>
-      <div class="hint" data-value="instruction" hidden></div>
-      <small data-value="task-id"></small>
     </div>
     <div id="result-overlay" hidden>
       <div class="card">
