@@ -169,6 +169,7 @@ npm run lint           # ESLint (typescript-eslint, `as`-касты запрещ
 npm run dev            # dev-сервер Vite на http://localhost:5173
 npm run build          # проверка типов + сборка в ./docs (GitHub Pages)
 npm run preview        # локальный просмотр прод-сборки
+npm run shot -- 0700   # скриншоты сцен в ./shots (headless Chromium, см. scripts/shot.mjs)
 ```
 
 **TDD.** Тесты пишутся раньше кода: чистые модули (`game/`) покрыты юнит-тестами полностью; рендер и DOM-ввод проверяются вручную. `tasks.test.ts` прогоняет каждую задачу через движок и проверяет, что она разрешима (эталонный «идеальный проезд» завершается успехом).
