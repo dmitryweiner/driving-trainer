@@ -68,6 +68,13 @@ function isMobile(): boolean {
   return hasTouch && smallerSide < 800;
 }
 
+// сброс накопленной статистики (✓/✗/%) — очередь задач не трогаем
+document.getElementById('btn-reset-stats')?.addEventListener('click', () => {
+  if (!window.confirm('Сбросить результаты?')) return;
+  session.resetStats();
+  saveSession();
+});
+
 renderer.resize();
 if (isMobile()) {
   document.body.classList.add('is-mobile');
