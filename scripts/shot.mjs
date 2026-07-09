@@ -77,7 +77,9 @@ page.on('console', (m) => {
 for (const id of ids.length ? ids : ['current']) {
   const url = id === 'current' ? BASE : `${BASE}/?task=${id}`;
   await page.goto(url);
-  await page.waitForSelector('#instruction');
+  // модалка билета открывается на старте задачи — закрываем «Решать!»
+  await page.waitForSelector('#ticket-overlay:not([hidden])');
+  await page.click('#btn-ticket-go');
   await page.waitForTimeout(waitSec * 1000);
   await page.screenshot({ path: `${outDir}/${id}.png` });
   console.log(`${outDir}/${id}.png`);

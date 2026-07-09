@@ -1,5 +1,5 @@
 import type { Car } from '../game/Car';
-import { LANE_W, ROAD_LEN, STOP_LINE_OFFSET, type Intersection, type Rect } from '../game/Intersection';
+import { LANE_W, STOP_LINE_OFFSET, type Intersection, type Rect } from '../game/Intersection';
 import type { NpcAgent, PedAgent } from '../game/Npc';
 import type { RoadGeom, Scenario } from '../game/Scenario';
 import type { Dir, LightState, SignSpec, SignType, Turn } from '../game/types';
@@ -118,6 +118,10 @@ export class Renderer {
     // разметка подъездов
     for (const d of inter.approaches) this.drawApproachMarkings(ctx, inter, d);
 
+    // контур зоны там, где её не накрывает подъездная дорога (иначе края
+    // полотна «не доходят» до перекрёстка и асфальт сливается с газоном)
+    if (!inter.roundabout) this.drawBoxOutline(ctx, inter);
+
     // стоп-линия игрока (толстая) и подъездов со знаками
     this.drawStopLine(ctx, inter, sc.task.scene.player.approach, 0.6);
     for (const sign of sc.task.scene.signs ?? []) {
@@ -170,6 +174,46 @@ export class Renderer {
     for (let i = 1; i < lanes.out; i++) drawLine(-inSide * i * LANE_W, true);
   }
 
+  /** Сегменты границы зоны перекрёстка, не занятые «проёмами» дорог. */
+  private drawBoxOutline(ctx: CanvasRenderingContext2D, inter: Intersection): void {
+    const b = inter.box;
+    ctx.strokeStyle = MARK;
+    ctx.lineWidth = 0.22;
+    ctx.setLineDash([]);
+    const seg = (x1: number, y1: number, x2: number, y2: number): void => {
+      if (Math.hypot(x2 - x1, y2 - y1) < 0.05) return;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    };
+    const sides: { d: Dir; horizontal: boolean; at: number; from: number; to: number }[] = [
+      { d: 'N', horizontal: true, at: b.yMin, from: b.xMin, to: b.xMax },
+      { d: 'S', horizontal: true, at: b.yMax, from: b.xMin, to: b.xMax },
+      { d: 'W', horizontal: false, at: b.xMin, from: b.yMin, to: b.yMax },
+      { d: 'E', horizontal: false, at: b.xMax, from: b.yMin, to: b.yMax },
+    ];
+    for (const s of sides) {
+      const r = inter.roadRect(s.d);
+      // интервал стороны, занятый дорогой (поперёк её направления)
+      const covered = r
+        ? s.horizontal
+          ? { min: r.xMin, max: r.xMax }
+          : { min: r.yMin, max: r.yMax }
+        : null;
+      const gaps = covered
+        ? [
+            { from: s.from, to: Math.max(s.from, covered.min) },
+            { from: Math.min(s.to, covered.max), to: s.to },
+          ]
+        : [{ from: s.from, to: s.to }];
+      for (const g of gaps) {
+        if (s.horizontal) seg(g.from, s.at, g.to, s.at);
+        else seg(s.at, g.from, s.at, g.to);
+      }
+    }
+  }
+
   private drawStopLine(ctx: CanvasRenderingContext2D, inter: Intersection, d: Dir, width: number): void {
     const lanes = inter.lanes[d];
     if (lanes.in === 0) return;
@@ -206,7 +250,8 @@ export class Renderer {
     const d = distToBoxEdge(spawn, inter);
     const ax = spawn.x + Math.cos(spawn.heading) * (d - 7);
     const ay = spawn.y + Math.sin(spawn.heading) * (d - 7);
-    drawTurnArrow(ctx, ax, ay, spawn.heading, player.goal);
+    // вопрос про порядок проезда: направление любое — «трезубец»
+    drawTurnArrow(ctx, ax, ay, spawn.heading, player.anyExit ? 'any' : player.goal);
   }
 
   private drawLabels(ctx: CanvasRenderingContext2D, sc: Scenario, inter: Intersection): void {
@@ -222,11 +267,16 @@ export class Renderer {
     ctx.fillStyle = 'rgba(255,255,255,0.75)';
     const b = inter.box;
     const streets = sc.task.scene.streetLabels ?? {};
-    const off = ROAD_LEN * 0.45;
-    if (streets.N) ctx.fillText(streets.N, b.xMax + 4, b.yMin - off);
-    if (streets.S) ctx.fillText(streets.S, b.xMax + 4, b.yMax + off);
-    if (streets.W) ctx.fillText(streets.W, b.xMin - off, b.yMin - 3.2);
-    if (streets.E) ctx.fillText(streets.E, b.xMax + off, b.yMin - 3.2);
+    // близко к перекрёстку, иначе на мобильном экране буквы не видны
+    const off = 8;
+    const rN = inter.roadRect('N');
+    const rS = inter.roadRect('S');
+    const rW = inter.roadRect('W');
+    const rE = inter.roadRect('E');
+    if (streets.N && rN) ctx.fillText(streets.N, rN.xMax + 3, b.yMin - off);
+    if (streets.S && rS) ctx.fillText(streets.S, rS.xMax + 3, b.yMax + off);
+    if (streets.W && rW) ctx.fillText(streets.W, b.xMin - off, rW.yMin - 2.6);
+    if (streets.E && rE) ctx.fillText(streets.E, b.xMax + off, rE.yMin - 2.6);
   }
 
   private drawIntersectionFurniture(ctx: CanvasRenderingContext2D, sc: Scenario, inter: Intersection): void {
@@ -387,49 +437,73 @@ function drawRailway(ctx: CanvasRenderingContext2D, r: Rect): void {
   }
 }
 
-function drawTurnArrow(ctx: CanvasRenderingContext2D, x: number, y: number, heading: number, turn: Turn): void {
+function drawTurnArrow(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  heading: number,
+  turn: Turn | 'any',
+): void {
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(heading + Math.PI / 2); // локально: вперёд = -y
   ctx.strokeStyle = 'rgba(255,255,255,0.85)';
   ctx.fillStyle = 'rgba(255,255,255,0.85)';
-  ctx.lineWidth = 0.45;
+  ctx.lineWidth = 0.34;
   ctx.lineCap = 'round';
+  // острый наконечник: длинный (1.35) и узкий (полуширина 0.42)
   const head = (tx: number, ty: number, ang: number): void => {
     ctx.save();
     ctx.translate(tx, ty);
     ctx.rotate(ang);
     ctx.beginPath();
     ctx.moveTo(0, 0);
-    ctx.lineTo(-0.6, 1.0);
-    ctx.lineTo(0.6, 1.0);
+    ctx.lineTo(-0.42, 1.35);
+    ctx.lineTo(0.42, 1.35);
     ctx.closePath();
     ctx.fill();
     ctx.restore();
   };
+  if (turn === 'any') {
+    // три направления сразу: прямо, налево и направо
+    ctx.beginPath();
+    ctx.moveTo(0, 1.8);
+    ctx.lineTo(0, -0.9);
+    ctx.stroke();
+    head(0, -2.2, 0);
+    for (const sgn of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(0, 1.0);
+      ctx.quadraticCurveTo(0, 0, sgn * 0.9, 0);
+      ctx.stroke();
+      head(sgn * 2.2, 0, (sgn * Math.PI) / 2);
+    }
+    ctx.restore();
+    return;
+  }
   ctx.beginPath();
   ctx.moveTo(0, 1.8);
   if (turn === 'straight') {
-    ctx.lineTo(0, -1.4);
+    ctx.lineTo(0, -0.9);
     ctx.stroke();
-    head(0, -1.6, 0);
+    head(0, -2.2, 0);
   } else if (turn === 'left') {
     ctx.lineTo(0, -0.4);
     ctx.quadraticCurveTo(0, -1.4, -1.0, -1.4);
     ctx.stroke();
-    head(-1.2, -1.4, -Math.PI / 2);
+    head(-2.3, -1.4, -Math.PI / 2);
   } else if (turn === 'right') {
     ctx.lineTo(0, -0.4);
     ctx.quadraticCurveTo(0, -1.4, 1.0, -1.4);
     ctx.stroke();
-    head(1.2, -1.4, Math.PI / 2);
+    head(2.3, -1.4, Math.PI / 2);
   } else {
     // разворот
     ctx.lineTo(0, -0.6);
     ctx.quadraticCurveTo(0, -1.6, -0.8, -1.6);
     ctx.quadraticCurveTo(-1.6, -1.6, -1.6, -0.6);
     ctx.stroke();
-    head(-1.6, -0.4, Math.PI);
+    head(-1.6, 0.7, Math.PI);
   }
   ctx.restore();
 }
@@ -638,13 +712,17 @@ function drawNpc(ctx: CanvasRenderingContext2D, npc: NpcAgent): void {
 function drawPedestrian(ctx: CanvasRenderingContext2D, ped: PedAgent): void {
   ctx.save();
   ctx.translate(ped.pos.x, ped.pos.y);
+  // светлая обводка, чтобы фигура читалась и на асфальте, и на зебре
   ctx.fillStyle = '#2563eb';
+  ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+  ctx.lineWidth = 0.12;
   ctx.beginPath();
-  ctx.ellipse(0, 0, 0.3, 0.2, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 0, 0.62, 0.42, 0, 0, Math.PI * 2);
   ctx.fill();
+  ctx.stroke();
   ctx.fillStyle = '#f5d6a8';
   ctx.beginPath();
-  ctx.arc(0, 0, 0.14, 0, Math.PI * 2);
+  ctx.arc(0, 0, 0.28, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 }

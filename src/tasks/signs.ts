@@ -479,4 +479,249 @@ export const signTasks: TaskDef[] = [
       player: { approach: 'S', order: 0, goal: 'straight' },
     },
   },
+  {
+    id: '0355',
+    category: 'signs',
+    instruction: 'Знак 302 «стоп»: полностью остановитесь перед стоп-линией, затем проезжайте.',
+    scene: {
+      kind: 'intersection',
+      signs: [{ approach: 'S', type: 'stop' }],
+      player: { approach: 'S', order: 0, goal: 'straight' },
+    },
+  },
+  {
+    id: '0182',
+    category: 'signs',
+    instruction: 'Остановитесь непосредственно перед стоп-линией, затем поверните направо.',
+    scene: {
+      kind: 'intersection',
+      approaches: ['E', 'S', 'W'],
+      signs: [{ approach: 'S', type: 'stop' }],
+      player: { approach: 'S', order: 0, goal: 'right' },
+    },
+  },
+  {
+    id: '0535',
+    category: 'signs',
+    instruction:
+      'Знак «стоп»: остановитесь перед стоп-линией — с неё хорошо видно пересекающую дорогу.',
+    scene: {
+      kind: 'intersection',
+      signs: [{ approach: 'S', type: 'stop' }],
+      player: { approach: 'S', order: 0, goal: 'straight' },
+    },
+  },
+  {
+    id: '0183',
+    category: 'signs',
+    instruction:
+      'Знак «уступи дорогу»: остановитесь так, чтобы видеть пересекающую дорогу, и пропустите автомобиль.',
+    scene: {
+      kind: 'intersection',
+      signs: [{ approach: 'S', type: 'yield' }],
+      npcs: [{ approach: 'E', turn: 'straight', order: 0, kind: 'car', color: '#cc4444', label: '1' }],
+      player: { approach: 'S', order: 1, goal: 'straight' },
+    },
+  },
+  {
+    id: '0957',
+    category: 'signs',
+    instruction:
+      'Знак «стоп» обязателен для поворачивающих налево: остановитесь и поверните налево.',
+    scene: {
+      kind: 'intersection',
+      signs: [{ approach: 'S', type: 'stop' }],
+      player: { approach: 'S', order: 0, goal: 'left' },
+    },
+  },
+  {
+    id: '0629',
+    category: 'signs',
+    instruction: 'После знака — ограничение 30 км/ч: не превышайте до конца зоны.',
+    scene: {
+      kind: 'road',
+      zones: [{ type: 'speed-limit', at: 12, length: 40, value: 30 }],
+      signs: [{ approach: 'S', type: 'speed-limit', value: 30 }],
+      player: { approach: 'S', order: 0, goal: 'straight' },
+    },
+  },
+  {
+    id: '0521',
+    category: 'signs',
+    instruction: 'Знак ограничивает скорость 50 км/ч: держите скорость не выше до конца зоны.',
+    scene: {
+      kind: 'road',
+      zones: [{ type: 'speed-limit', at: 12, length: 42, value: 50 }],
+      signs: [{ approach: 'S', type: 'speed-limit', value: 50 }],
+      player: { approach: 'S', order: 0, goal: 'straight' },
+    },
+  },
+  {
+    id: '0154',
+    category: 'signs',
+    instruction: 'Жилая улица со смешанным движением: не быстрее 30 км/ч.',
+    scene: {
+      kind: 'road',
+      zones: [{ type: 'speed-limit', at: 10, length: 45, value: 30 }],
+      signs: [{ approach: 'S', type: 'speed-limit', value: 30 }],
+      player: { approach: 'S', order: 0, goal: 'straight' },
+    },
+  },
+  {
+    id: '1486',
+    category: 'signs',
+    instruction: 'Городская дорога без знаков: максимальная скорость — 50 км/ч.',
+    scene: {
+      kind: 'road',
+      zones: [{ type: 'speed-limit', at: 8, length: 45, value: 50 }],
+      player: { approach: 'S', order: 0, goal: 'straight' },
+    },
+  },
+  {
+    id: '0157',
+    category: 'signs',
+    instruction:
+      'Красный мигает: остановитесь перед стоп-линией переезда и ждите, пока сигнал не погаснет.',
+    scene: {
+      kind: 'road',
+      zones: [{ type: 'railway', at: 22, length: 6 }],
+      signs: [{ approach: 'S', type: 'railway' }],
+      light: { phases: [{ state: 'red-flashing', duration: 8 }, { state: 'off' }] },
+      player: { approach: 'S', order: 0, goal: 'straight' },
+    },
+  },
+  {
+    id: '0161',
+    category: 'signs',
+    instruction:
+      'Слышен поезд — сигнал мигает красным: полная остановка перед переездом, ехать можно после отключения сигнала.',
+    scene: {
+      kind: 'road',
+      zones: [{ type: 'railway', at: 22, length: 6 }],
+      signs: [{ approach: 'S', type: 'railway' }],
+      light: { phases: [{ state: 'red-flashing', duration: 9 }, { state: 'off' }] },
+      player: { approach: 'S', order: 0, goal: 'straight' },
+    },
+  },
+  {
+    id: '0158',
+    category: 'signs',
+    instruction:
+      'Приближается поезд: остановитесь перед переездом и ждите, пока он проедет (сигнал погаснет).',
+    scene: {
+      kind: 'road',
+      zones: [{ type: 'railway', at: 24, length: 6 }],
+      signs: [{ approach: 'S', type: 'railway' }],
+      light: { phases: [{ state: 'red-flashing', duration: 10 }, { state: 'off' }] },
+      player: { approach: 'S', order: 0, goal: 'straight' },
+    },
+  },
+  {
+    id: '0162',
+    category: 'signs',
+    instruction:
+      'Сигнал приближения поезда: полностью остановитесь и не продолжайте движение, пока он не отключится.',
+    scene: {
+      kind: 'road',
+      zones: [{ type: 'railway', at: 22, length: 6 }],
+      signs: [{ approach: 'S', type: 'railway' }],
+      light: { phases: [{ state: 'red-flashing', duration: 7 }, { state: 'off' }] },
+      player: { approach: 'S', order: 0, goal: 'straight' },
+    },
+  },
+  {
+    id: '0392',
+    category: 'signs',
+    instruction:
+      'Перед переездом знак «стоп»: полностью остановитесь, осмотритесь и только потом пересекайте пути.',
+    scene: {
+      kind: 'road',
+      zones: [{ type: 'railway', at: 22, length: 6 }],
+      signs: [
+        { approach: 'S', type: 'stop' },
+        { approach: 'S', type: 'railway' },
+      ],
+      player: { approach: 'S', order: 0, goal: 'straight' },
+    },
+  },
+  {
+    id: '0460',
+    category: 'signs',
+    instruction:
+      'Переезд без шлагбаума: замедлитесь и пересеките пути не останавливаясь и не задерживаясь на рельсах.',
+    scene: {
+      kind: 'road',
+      zones: [{ type: 'railway', at: 22, length: 6 }],
+      signs: [{ approach: 'S', type: 'railway' }],
+      player: { approach: 'S', order: 0, goal: 'straight' },
+    },
+  },
+  {
+    id: '0187',
+    category: 'signs',
+    instruction: 'Переезд свободен: убедитесь в безопасности и пересеките его без остановки.',
+    scene: {
+      kind: 'road',
+      zones: [{ type: 'railway', at: 25, length: 6 }],
+      signs: [{ approach: 'S', type: 'railway' }],
+      player: { approach: 'S', order: 0, goal: 'straight' },
+    },
+  },
+  {
+    id: '0155',
+    category: 'signs',
+    instruction:
+      'Приближаясь к переезду, замедлитесь так, чтобы при необходимости успеть остановиться. Путь свободен — проезжайте.',
+    scene: {
+      kind: 'road',
+      zones: [{ type: 'railway', at: 30, length: 6 }],
+      signs: [{ approach: 'S', type: 'railway' }],
+      player: { approach: 'S', order: 0, goal: 'straight' },
+    },
+  },
+  {
+    id: '0796',
+    category: 'signs',
+    instruction: 'Разворот здесь запрещён знаком: проезжайте перекрёсток прямо.',
+    scene: {
+      kind: 'intersection',
+      signs: [{ approach: 'S', type: 'no-u-turn' }],
+      player: { approach: 'S', order: 0, goal: 'straight' },
+    },
+  },
+  {
+    id: '0431',
+    category: 'signs',
+    instruction:
+      'Впереди круговое движение: замедлитесь и будьте готовы остановиться — на кольце уже есть транспорт.',
+    scene: {
+      kind: 'intersection',
+      roundabout: true,
+      signs: [{ approach: 'S', type: 'roundabout' }],
+      npcs: [
+        {
+          approach: 'W',
+          turn: 'straight',
+          order: 0,
+          kind: 'car',
+          color: '#cc8822',
+          label: '1',
+          ring: { fromAngleDeg: 180, toSide: 'E' },
+        },
+      ],
+      player: { approach: 'S', order: 1, goal: 'straight' },
+    },
+  },
+  {
+    id: '1761',
+    category: 'signs',
+    instruction:
+      'Односторонняя дорога, знак «стоп» справа обязателен для обеих полос: остановитесь даже на левой полосе.',
+    scene: {
+      kind: 'intersection',
+      lanes: { S: { in: 2, out: 0 }, N: { in: 0, out: 2 } },
+      signs: [{ approach: 'S', type: 'stop' }],
+      player: { approach: 'S', order: 0, goal: 'straight', startLane: 1, goalLane: 1 },
+    },
+  },
 ];

@@ -428,7 +428,11 @@ export class Scenario {
     const exited = this.exitedVia(pos);
     const ownSide = this.inter !== null && exited === this.task.scene.player.approach;
     if (exited && (!ownSide || this.wasNearStop)) {
-      if (exited !== this.goalSide) {
+      // anyExit: любой выезд годится, кроме возврата на свой подъезд
+      const wrongWay = this.task.scene.player.anyExit
+        ? ownSide
+        : exited !== this.goalSide;
+      if (wrongWay) {
         return this.fail(
           'wrong-way',
           ownSide ? 'Вы вернулись назад, не проехав перекрёсток.' : 'Вы уехали не в том направлении.',

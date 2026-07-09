@@ -81,6 +81,41 @@ export const pedestrianTasks: TaskDef[] = [
     },
   },
   {
+    id: '0189',
+    category: 'pedestrians',
+    instruction: 'Люди на переходе: замедлитесь и остановитесь, чтобы они безопасно перешли дорогу.',
+    scene: {
+      kind: 'road',
+      zones: [{ type: 'crosswalk', at: 18, length: 3 }],
+      signs: [{ approach: 'S', type: 'crosswalk' }],
+      pedestrians: [{ approach: 'S', from: 'right' }],
+      player: { approach: 'S', order: 0, goal: 'straight' },
+    },
+  },
+  {
+    id: '0893',
+    category: 'pedestrians',
+    instruction:
+      'Переход пуст: снизьте скорость, убедитесь, что пешеходов нет поблизости, и проезжайте.',
+    scene: {
+      kind: 'road',
+      zones: [{ type: 'crosswalk', at: 20, length: 3 }],
+      signs: [{ approach: 'S', type: 'crosswalk' }],
+      player: { approach: 'S', order: 0, goal: 'straight' },
+    },
+  },
+  {
+    id: '0897',
+    category: 'pedestrians',
+    instruction:
+      'Поворачивая направо, пропустите пешеходов, переходящих вашу полосу по переходу.',
+    scene: {
+      kind: 'intersection',
+      pedestrians: [{ approach: 'S', from: 'right' }],
+      player: { approach: 'S', order: 0, goal: 'right' },
+    },
+  },
+  {
     id: '0915',
     category: 'pedestrians',
     instruction:

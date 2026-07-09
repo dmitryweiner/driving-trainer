@@ -133,7 +133,8 @@ function loop(now: number): void {
     recorded = false;
   }
 
-  scenario.update(dt, input.read());
+  // пока открыт билет — симуляция (и таймер) стоит
+  if (!hud.isTicketOpen) scenario.update(dt, input.read());
 
   if (scenario.state.kind !== 'driving' && !recorded) {
     recorded = true;

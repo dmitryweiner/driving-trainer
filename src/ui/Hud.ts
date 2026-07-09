@@ -11,6 +11,7 @@ export class Hud {
   private readonly hintEl = byValue('instruction');
   private readonly taskIdEl = byValue('task-id');
   private readonly overlayEl = document.getElementById('result-overlay');
+  private readonly ticketEl = document.getElementById('ticket-overlay');
   private readonly resultTitleEl = byValue('result-title');
   private readonly resultReasonEl = byValue('result-reason');
   private readonly resultQuestionEl = byValue('result-question');
@@ -30,9 +31,24 @@ export class Hud {
       else this.hintEl.setAttribute('hidden', '');
     };
     document.getElementById('btn-hint')?.addEventListener('click', toggleHint);
+    // билет: модалка в начале задачи («Решать!» закрывает, 🎫 открывает снова)
+    document.getElementById('btn-ticket-go')?.addEventListener('click', () => this.setTicketOpen(false));
+    document.getElementById('btn-ticket')?.addEventListener('click', () => this.setTicketOpen(true));
     window.addEventListener('keydown', (e: KeyboardEvent) => {
       if (e.code === 'KeyI') toggleHint();
+      if (e.code === 'KeyT') this.setTicketOpen(!this.isTicketOpen);
     });
+  }
+
+  /** Пока билет открыт, симуляция стоит (см. main.ts). */
+  get isTicketOpen(): boolean {
+    return this.ticketEl !== null && !this.ticketEl.hasAttribute('hidden');
+  }
+
+  private setTicketOpen(open: boolean): void {
+    if (!this.ticketEl) return;
+    if (open) this.ticketEl.removeAttribute('hidden');
+    else this.ticketEl.setAttribute('hidden', '');
   }
 
   update(sc: Scenario, stats: SessionStats): void {
@@ -62,6 +78,7 @@ export class Hud {
       setText(this.hintEl, sc.task.instruction);
       this.hintEl?.setAttribute('hidden', '');
       setText(this.taskIdEl, `№${sc.task.id}`);
+      this.setTicketOpen(true);
     }
 
     const finished = sc.state.kind !== 'driving';

@@ -158,6 +158,48 @@ describe('Scenario: направление и дорога', () => {
     expect(s.state).toMatchObject({ kind: 'failed', reason: 'wrong-way' });
   });
 
+  it('anyExit: уехал прямо вместо налево — засчитано', () => {
+    const s = new Scenario(
+      makeTask({
+        kind: 'intersection',
+        approaches: ['N', 'E', 'S', 'W'],
+        player: { approach: 'S', order: 0, goal: 'left', anyExit: true },
+      }),
+    );
+    run(s, () => GO);
+    expect(s.state.kind).toBe('passed');
+  });
+
+  it('anyExit: возврат назад — всё равно провал wrong-way', () => {
+    const s = new Scenario(
+      makeTask({
+        kind: 'intersection',
+        approaches: ['N', 'E', 'S', 'W'],
+        player: { approach: 'S', order: 0, goal: 'left', anyExit: true },
+      }),
+    );
+    let phase = 0;
+    run(s, (sc) => {
+      if (phase === 0 && sc.distanceToStopLine() < 9 && sc.car.velocity < 0.05) phase = 1;
+      if (phase === 0) return sc.distanceToStopLine() < 8 ? wait(sc) : GO;
+      return { throttle: 0, brake: 1, steer: 0 }; // задний ход
+    });
+    expect(s.state).toMatchObject({ kind: 'failed', reason: 'wrong-way' });
+  });
+
+  it('anyExit: порядок проезда всё равно проверяется', () => {
+    const s = new Scenario(
+      makeTask({
+        kind: 'intersection',
+        approaches: ['N', 'E', 'S', 'W'],
+        npcs: [{ approach: 'E', turn: 'straight', order: 0, kind: 'car', color: '#00f', label: '1' }],
+        player: { approach: 'S', order: 1, goal: 'left', anyExit: true },
+      }),
+    );
+    run(s, () => GO);
+    expect(s.state).toMatchObject({ kind: 'failed', reason: 'priority' });
+  });
+
   it('съезд с проезжей части — провал off-road', () => {
     const s = new Scenario(
       makeTask({

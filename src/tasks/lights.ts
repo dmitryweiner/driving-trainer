@@ -185,6 +185,84 @@ export const lightTasks: TaskDef[] = [
     },
   },
   {
+    id: '0059',
+    category: 'lights',
+    instruction:
+      'Зелёный сигнал светофора главнее знака «уступи дорогу»: проезжайте без остановки.',
+    scene: {
+      kind: 'intersection',
+      signs: [{ approach: 'S', type: 'yield' }],
+      light: { phases: [{ state: 'green' }] },
+      npcs: [{ approach: 'W', turn: 'straight', order: 1, kind: 'car', color: '#cc8822', label: '1' }],
+      player: { approach: 'S', order: 0, goal: 'straight' },
+    },
+  },
+  {
+    id: '0069',
+    category: 'lights',
+    instruction:
+      'Красный сигнал светофора главнее знака «главная дорога»: остановитесь и дождитесь зелёного.',
+    scene: {
+      kind: 'intersection',
+      signs: [{ approach: 'S', type: 'priority-road' }],
+      light: { phases: [{ state: 'red', duration: 6 }, { state: 'green' }] },
+      player: { approach: 'S', order: 0, goal: 'straight' },
+    },
+  },
+  {
+    id: '1750',
+    category: 'lights',
+    instruction:
+      'Устойчивый жёлтый: сейчас загорится красный. Остановитесь перед стоп-линией и дождитесь зелёного.',
+    scene: {
+      kind: 'intersection',
+      light: {
+        phases: [
+          { state: 'yellow', duration: 4 },
+          { state: 'red', duration: 5 },
+          { state: 'red-yellow', duration: 2 },
+          { state: 'green' },
+        ],
+      },
+      player: { approach: 'S', order: 0, goal: 'straight' },
+    },
+  },
+  {
+    id: '0747',
+    category: 'lights',
+    instruction:
+      'Даже если сзади спецтранспорт с сиреной — въезжать на перекрёсток на красный запрещено. Ждите зелёного.',
+    scene: {
+      kind: 'intersection',
+      light: { phases: [{ state: 'red', duration: 8 }, { state: 'green' }] },
+      player: { approach: 'S', order: 0, goal: 'straight' },
+    },
+  },
+  {
+    id: '1751',
+    category: 'lights',
+    instruction:
+      'Зелёный горит, но перекрёсток перекрыт: не въезжайте, пока трактор его не освободит.',
+    scene: {
+      kind: 'intersection',
+      light: { phases: [{ state: 'green' }] },
+      npcs: [{ approach: 'W', turn: 'straight', order: 0, kind: 'tractor', color: '#775533', label: '1' }],
+      player: { approach: 'S', order: 1, goal: 'straight' },
+    },
+  },
+  {
+    id: '0974',
+    category: 'lights',
+    instruction:
+      'Зелёный свет — но следите за пешеходами: пропустите пешехода на переходе.',
+    scene: {
+      kind: 'intersection',
+      light: { phases: [{ state: 'green' }] },
+      pedestrians: [{ approach: 'S', from: 'right' }],
+      player: { approach: 'S', order: 0, goal: 'straight' },
+    },
+  },
+  {
     id: '0978',
     category: 'lights',
     instruction:

@@ -127,30 +127,52 @@ body.is-mobile #mobile-controls { display: block; }
 #btn-retry, #btn-next { margin-left: 0; font-size: 20px; }
 #btn-retry { margin-left: auto; }
 
-#instruction {
+/* Модалка билета: показывается в начале задачи, закрывается «Решать!»,
+   снова открывается кнопкой 🎫 в шапке или клавишей T. */
+#ticket-overlay {
   position: absolute;
-  bottom: 14px;
-  left: 50%;
-  transform: translateX(-50%);
-  max-width: min(680px, calc(100% - 24px));
-  background: var(--hud-bg);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 12px;
-  padding: 10px 16px;
-  font-size: 15px;
-  line-height: 1.35;
-  text-align: center;
-  pointer-events: none;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 12, 16, 0.35);
+  z-index: 9;
 }
-#instruction small { opacity: 0.55; margin-left: 8px; white-space: nowrap; }
-#instruction .q-row { display: inline; }
-#instruction .hint {
-  margin-top: 6px;
-  padding-top: 6px;
+#ticket-overlay[hidden] { display: none; }
+#ticket-overlay .card {
+  background: rgba(24, 26, 33, 0.96);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  padding: 20px 24px;
+  max-width: min(560px, calc(100% - 32px));
+  max-height: calc(100% - 90px);
+  overflow-y: auto;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+}
+#ticket-overlay .question { margin: 0 0 8px; font-size: 17px; line-height: 1.4; }
+#ticket-overlay .hint {
+  margin: 0 0 8px;
+  padding-top: 8px;
   border-top: 1px solid rgba(255,255,255,0.12);
   color: #ffe9a8;
+  font-size: 15px;
 }
+#ticket-overlay .meta { margin: 0 0 12px; opacity: 0.55; }
+#ticket-overlay .actions { display: flex; justify-content: center; }
+#btn-ticket-go {
+  background: rgba(110, 224, 140, 0.16);
+  color: var(--won);
+  border: 1px solid rgba(110, 224, 140, 0.5);
+  border-radius: 10px;
+  padding: 10px 26px;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+#btn-ticket-go:hover { background: rgba(110, 224, 140, 0.28); }
+#btn-ticket { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 #btn-hint {
   pointer-events: auto;
   cursor: pointer;
@@ -166,7 +188,6 @@ body.is-mobile #mobile-controls { display: block; }
   vertical-align: middle;
 }
 #btn-hint:hover { background: rgba(255,255,255,0.2); }
-body.is-mobile #instruction { bottom: unset; top: 64px; }
 
 #result-overlay {
   position: absolute;

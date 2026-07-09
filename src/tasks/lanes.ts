@@ -195,4 +195,167 @@ export const laneTasks: TaskDef[] = [
       streetLabels: { S: 'А', E: 'С' },
     },
   },
+  {
+    id: '0646',
+    category: 'lanes',
+    instruction: 'Поворот налево выполняется с левой полосы вашего направления.',
+    scene: {
+      kind: 'intersection',
+      lanes: {
+        S: { in: 2, out: 1 },
+        N: { in: 1, out: 2 },
+      },
+      player: { approach: 'S', order: 0, goal: 'left', startLane: 1, goalLane: 0 },
+    },
+  },
+  {
+    id: '0651',
+    category: 'lanes',
+    instruction:
+      'Стрелка на вашей полосе обязывает повернуть налево на ближайшем перекрёстке.',
+    scene: {
+      kind: 'intersection',
+      approaches: ['E', 'S', 'W'],
+      lanes: {
+        S: { in: 2, out: 1 },
+      },
+      player: { approach: 'S', order: 0, goal: 'left', startLane: 1, goalLane: 0 },
+    },
+  },
+  {
+    id: '0727',
+    category: 'lanes',
+    instruction: 'Чтобы повернуть налево, займите левую из трёх полос и поверните с неё.',
+    scene: {
+      kind: 'intersection',
+      lanes: {
+        S: { in: 3, out: 1 },
+        N: { in: 1, out: 3 },
+      },
+      player: { approach: 'S', order: 0, goal: 'left', startLane: 2, goalLane: 0 },
+    },
+  },
+  {
+    id: '0756',
+    category: 'lanes',
+    instruction: 'Две полосы в вашем направлении: двигайтесь по правой и проезжайте прямо.',
+    scene: {
+      kind: 'intersection',
+      lanes: {
+        S: { in: 2, out: 1 },
+        N: { in: 1, out: 2 },
+      },
+      player: { approach: 'S', order: 0, goal: 'straight', startLane: 0, goalLane: 0 },
+    },
+  },
+  {
+    id: '0783',
+    category: 'lanes',
+    instruction:
+      'Обе полосы предназначены для поворота направо: поворачивайте с левой полосы во вторую полосу.',
+    scene: {
+      kind: 'intersection',
+      lanes: {
+        S: { in: 2, out: 1 },
+        E: { in: 1, out: 2 },
+      },
+      player: { approach: 'S', order: 0, goal: 'right', startLane: 1, goalLane: 1 },
+    },
+  },
+  {
+    id: '0791',
+    category: 'lanes',
+    instruction:
+      'Обе полосы односторонней дороги — для поворота налево: можно повернуть и с правой из них, в правую полосу.',
+    scene: {
+      kind: 'intersection',
+      approaches: ['E', 'S', 'W'],
+      lanes: {
+        S: { in: 2, out: 0 },
+        W: { in: 0, out: 2 },
+        E: { in: 2, out: 0 },
+      },
+      player: { approach: 'S', order: 0, goal: 'left', startLane: 0, goalLane: 0 },
+    },
+  },
+  {
+    id: '0784',
+    category: 'lanes',
+    instruction:
+      'Поверните налево с двухсторонней улицы А на одностороннюю Б: с полосы 2 на полосу 5.',
+    scene: {
+      kind: 'intersection',
+      approaches: ['E', 'S', 'W'],
+      lanes: {
+        S: { in: 2, out: 2 },
+        W: { in: 0, out: 2 },
+        E: { in: 2, out: 0 },
+      },
+      player: { approach: 'S', order: 0, goal: 'left', startLane: 1, goalLane: 1 },
+      laneLabels: [
+        { side: 'S', flow: 'in', index: 0, label: '1' },
+        { side: 'S', flow: 'in', index: 1, label: '2' },
+        { side: 'S', flow: 'out', index: 0, label: '4' },
+        { side: 'S', flow: 'out', index: 1, label: '3' },
+        { side: 'W', flow: 'out', index: 0, label: '6' },
+        { side: 'W', flow: 'out', index: 1, label: '5' },
+      ],
+      streetLabels: { S: 'А', W: 'Б' },
+    },
+  },
+  {
+    id: '0119',
+    category: 'lanes',
+    instruction: 'Разворот налево выполняется с левой полосы: развернитесь на перекрёстке.',
+    scene: {
+      kind: 'intersection',
+      lanes: { S: { in: 2, out: 2 }, N: { in: 2, out: 2 } },
+      player: { approach: 'S', order: 0, goal: 'uturn', startLane: 1 },
+    },
+  },
+  {
+    id: '0559',
+    category: 'lanes',
+    instruction:
+      'Знаков и разметки, запрещающих разворот, нет: развернитесь влево с левой полосы.',
+    scene: {
+      kind: 'intersection',
+      lanes: { S: { in: 2, out: 2 }, N: { in: 2, out: 2 } },
+      player: { approach: 'S', order: 0, goal: 'uturn', startLane: 1 },
+    },
+  },
+  {
+    id: '1742',
+    category: 'lanes',
+    instruction:
+      'Запрещающего знака нет — разворот разрешён с любой полосы. Развернитесь с правой полосы.',
+    scene: {
+      kind: 'intersection',
+      lanes: { S: { in: 2, out: 2 }, N: { in: 2, out: 2 } },
+      player: { approach: 'S', order: 0, goal: 'uturn', startLane: 0 },
+    },
+  },
+  {
+    id: '1718',
+    category: 'lanes',
+    instruction:
+      'Светофора нет: пропустите встречный автомобиль и развернитесь, не мешая движению.',
+    scene: {
+      kind: 'intersection',
+      lanes: { S: { in: 2, out: 2 }, N: { in: 2, out: 2 } },
+      npcs: [{ approach: 'N', turn: 'straight', order: 0, kind: 'car', color: '#3355cc', label: '1' }],
+      player: { approach: 'S', order: 1, goal: 'uturn', startLane: 1 },
+    },
+  },
+  {
+    id: '0117',
+    category: 'lanes',
+    instruction:
+      'Помех нет, запрещающего знака нет: развернитесь на перекрёстке.',
+    scene: {
+      kind: 'intersection',
+      lanes: { S: { in: 2, out: 2 }, N: { in: 2, out: 2 } },
+      player: { approach: 'S', order: 0, goal: 'uturn', startLane: 1 },
+    },
+  },
 ];
